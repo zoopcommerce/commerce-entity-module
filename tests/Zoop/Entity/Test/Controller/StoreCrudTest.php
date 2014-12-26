@@ -33,6 +33,7 @@ class StoreCrudTest extends AbstractTest
 
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
+                Origin::fromString('Origin: http://blanka.local'),
                 Host::fromString('Host: api.zoopcommerce.local')
             ]);
 
@@ -59,7 +60,7 @@ class StoreCrudTest extends AbstractTest
             "email" => "info@teslamotors.com.au"
         ];
 
-        DataHelper::createStores(self::getNoAuthDocumentManager(), self::getDbName());
+        DataHelper::createEntities(self::getNoAuthDocumentManager(), self::getDbName());
         DataHelper::createZoopUser(self::getNoAuthDocumentManager(), self::getDbName());
 
         $post = json_encode($data);

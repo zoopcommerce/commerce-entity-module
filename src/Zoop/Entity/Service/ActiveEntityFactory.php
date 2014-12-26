@@ -136,7 +136,7 @@ class ActiveEntityFactory implements AbstractFactoryInterface
                 $this->setActiveUser($activeUser);
             }
         } catch (Exception $error) {
-            
+
         }
 
         $serviceManager->setAllowOverride(true);
@@ -173,18 +173,20 @@ class ActiveEntityFactory implements AbstractFactoryInterface
     {
         $this->systemUser = $systemUser;
     }
-    
+
     /**
      * @return User
      */
-    public function getActiveUser() {
+    public function getActiveUser()
+    {
         return $this->activeUser;
     }
 
     /**
      * @param User $activeUser
      */
-    public function setActiveUser($activeUser) {
+    public function setActiveUser($activeUser)
+    {
         $this->activeUser = $activeUser;
     }
 

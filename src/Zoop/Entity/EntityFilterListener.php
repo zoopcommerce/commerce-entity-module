@@ -61,7 +61,7 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
             $serviceManager = $this->getServiceLocator();
             $manifest = $serviceManager->get('shard.commerce.manifest');
             $zone = $manifest->getServiceManager()->get('extension.zone');
-            
+
             $entities = $user->getEntities();
             $zone->setReadFilterInclude($entities);
         }

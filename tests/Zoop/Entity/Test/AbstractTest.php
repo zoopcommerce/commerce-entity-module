@@ -27,11 +27,11 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
         $this->setApplicationConfig(
             require __DIR__ . '/../../../test.application.config.php'
         );
-        
+
         if (!isset(self::$documentManager)) {
             self::$documentManager = $this->getApplicationServiceLocator()
                 ->get('doctrine.odm.documentmanager.commerce');
-            
+
             self::$noAuthDocumentManager = $this->getApplicationServiceLocator()
                 ->get('doctrine.odm.documentmanager.noauth');
 
@@ -56,11 +56,11 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
     {
         self::clearDb();
     }
-    
+
     public static function clearDb()
     {
         $documentManager = self::getDocumentManager();
-        
+
         if ($documentManager instanceof DocumentManager) {
             $collections = $documentManager->getConnection()
                 ->selectDatabase(self::getDbName())
@@ -119,19 +119,19 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
     {
         $this->calls[$name] = $arguments;
     }
-    
+
     public function applyUserToRequest($request, $key, $secret)
     {
         $request->getHeaders()->addHeaders([
                 GenericHeader::fromString('Authorization: Basic ' . base64_encode(sprintf('%s:%s', $key, $secret)))
             ]);
     }
-    
+
     public function applyJsonRequest($request)
     {
         $accept = new Accept;
         $accept->addMediaType('application/json');
-        
+
         $request->getHeaders()
             ->addHeaders([
                 $accept,

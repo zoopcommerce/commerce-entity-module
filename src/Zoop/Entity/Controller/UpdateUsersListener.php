@@ -7,7 +7,6 @@ use Doctrine\ODM\MongoDB\DocumentManager;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zoop\Common\User\UserInterface;
-use Zoop\User\DataModel\Zoop\Admin as ZoopAdmin;
 use Zoop\Entity\DataModel\EntitiesFilterInterface;
 use Zoop\Entity\DataModel\EntityInterface;
 
@@ -43,7 +42,7 @@ class UpdateUsersListener
             $this->setServiceManager($options->getManifest()->getServiceManager());
 
             $user = $this->getUser();
-            if (!$user instanceof ZoopAdmin) {
+            if ($user instanceof EntitiesFilterInterface) {
                 $this->updateUsers($entity, $user);
             }
         }
@@ -72,17 +71,12 @@ class UpdateUsersListener
      */
     protected function getUsers(UserInterface $user)
     {
-        $qb = $this->getDocumentManager()
-            ->createQueryBuilder('Zoop\User\DataModel\AbstractUserFilter');
-
-        if ($user instanceof EntitiesFilterInterface) {
-            $qb->field('entities')->in($user->getEntities());
-        }
-
-        $users = $qb->getQuery()
+        return $this->getDocumentManager()
+            ->createQueryBuilder('Zoop\User\DataModel\AbstractUser')
+            ->field('entities')->in($user->getEntities())
+            ->field('username')->notEqual($user->getUsername())
+            ->getQuery()
             ->execute();
-
-        return $users;
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Zoop\Store\Test\Assets;
+namespace Zoop\Entity\Test\Assets;
 
 use Zoop\Store\DataModel\StoresTrait;
 use Zoop\Store\DataModel\StoresTraitInterface;

@@ -4,7 +4,7 @@ namespace Zoop\Entity;
 
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Id\AbstractIdGenerator;
-use Zoop\Entity\Slugger; //TODO: create this class
+use Zoop\Common\Slugger;
 
 class EntitySlugGenerator extends AbstractIdGenerator
 {

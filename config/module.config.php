@@ -25,13 +25,14 @@ return array(
                 'rest' => [
                     'customers' => [
                         'manifest' => 'commerce',
-                        'class' => 'Zoop\Entity\DataModel\Customer',
-                        'property' => 'id',
+                        'class' => 'Zoop\Customer\DataModel\Customer',
+                        'property' => 'slug',
                         'listeners' => [
                             'create' => [
                                 'zoop.shardmodule.listener.unserialize',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.create',
+                                'zoop.commerce.entity.listener.updateusers',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.location',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -81,50 +82,60 @@ return array(
                     ],
                     'partners' => [
                         'manifest' => 'commerce',
-                        'class' => 'Zoop\Entity\DataModel\Partner',
-                        'property' => 'id',
-//                        'listeners' => [
-//                            'create' => [
-//                                'zoop.shardmodule.listener.unserialize',
-//                                'zoop.shardmodule.listener.create',
-//                                'zoop.shardmodule.listener.flush',
-//                                'zoop.shardmodule.listener.location',
-//                                'zoop.shardmodule.listener.prepareviewmodel'
-//                            ],
-//                            'delete' => [
-//                                'zoop.shardmodule.listener.delete',
-//                                'zoop.shardmodule.listener.flush',
-//                                'zoop.shardmodule.listener.prepareviewmodel'
-//                            ],
-//                            'deleteList' => [],
-//                            'get' => [
-//                                'zoop.shardmodule.listener.get',
-//                                'zoop.shardmodule.listener.serialize',
-//                                'zoop.shardmodule.listener.prepareviewmodel'
-//                            ],
-//                            'getList' => [
-//                                'zoop.shardmodule.listener.getlist',
-//                                'zoop.shardmodule.listener.serialize',
-//                                'zoop.shardmodule.listener.prepareviewmodel'
-//                            ],
-//                            'patch' => [
-//                                'zoop.shardmodule.listener.unserialize',
-//                                'zoop.shardmodule.listener.idchange',
-//                                'zoop.shardmodule.listener.patch',
-//                                'zoop.shardmodule.listener.flush',
-//                                'zoop.shardmodule.listener.prepareviewmodel'
-//                            ],
-//                            'patchList' => [],
-//                            'update' => [
-//                                'zoop.shardmodule.listener.unserialize',
-//                                'zoop.shardmodule.listener.idchange',
-//                                'zoop.shardmodule.listener.update',
-//                                'zoop.shardmodule.listener.flush',
-//                                'zoop.shardmodule.listener.prepareviewmodel'
-//                            ],
-//                            'replaceList' => [],
-//                            'options' => [],
-//                        ],
+                        'class' => 'Zoop\Partner\DataModel\Partner',
+                        'property' => 'slug',
+                        'listeners' => [
+                            'create' => [
+                                'zoop.shardmodule.listener.unserialize',
+                                'zoop.api.listener.cors',
+                                'zoop.shardmodule.listener.create',
+                                'zoop.commerce.entity.listener.updateusers',
+                                'zoop.shardmodule.listener.flush',
+                                'zoop.shardmodule.listener.location',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'delete' => [
+                                'zoop.shardmodule.listener.delete',
+                                'zoop.api.listener.cors',
+                                'zoop.shardmodule.listener.flush',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'deleteList' => [],
+                            'get' => [
+                                'zoop.shardmodule.listener.get',
+                                'zoop.api.listener.cors',
+                                'zoop.shardmodule.listener.serialize',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'getList' => [
+                                'zoop.shardmodule.listener.getlist',
+                                'zoop.api.listener.cors',
+                                'zoop.shardmodule.listener.serialize',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'patch' => [
+                                'zoop.shardmodule.listener.unserialize',
+                                'zoop.api.listener.cors',
+                                'zoop.shardmodule.listener.idchange',
+                                'zoop.shardmodule.listener.patch',
+                                'zoop.shardmodule.listener.flush',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'patchList' => [],
+                            'update' => [
+                                'zoop.shardmodule.listener.unserialize',
+                                'zoop.api.listener.cors',
+                                'zoop.shardmodule.listener.idchange',
+                                'zoop.shardmodule.listener.update',
+                                'zoop.shardmodule.listener.flush',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'replaceList' => [],
+                            'options' => [
+                                'zoop.api.listener.options',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                        ],
                     ],
                     'stores' => [
                         'manifest' => 'commerce',
