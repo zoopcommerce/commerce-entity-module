@@ -30,7 +30,12 @@ class Module
         //enforcer events
         $documentManager = $serviceManager->get('doctrine.odm.documentmanager.commerce');
         $dmEventManager = $documentManager->getEventManager();
+        
+        //enforce the current entity is stored on documents that contain an entity filter
         $dmEventManager->addEventSubscriber($serviceManager->get('zoop.commerce.entity.enforcersubscriber'));
+        
+        //ensure when entities are persisted a user event is fired
+        $dmEventManager->addEventSubscriber($serviceManager->get('zoop.commerce.entity.usersubscriber'));
     }
 
     /**

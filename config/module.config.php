@@ -32,7 +32,6 @@ return array(
                                 'zoop.shardmodule.listener.unserialize',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.create',
-                                'zoop.commerce.entity.listener.updateusers',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.location',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -89,7 +88,6 @@ return array(
                                 'zoop.shardmodule.listener.unserialize',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.create',
-                                'zoop.commerce.entity.listener.updateusers',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.location',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -146,7 +144,6 @@ return array(
                                 'zoop.shardmodule.listener.unserialize',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.create',
-                                'zoop.commerce.entity.listener.updateusers',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.location',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -213,7 +210,7 @@ return array(
             'zoop.commerce.entity.dispatchlistener' => 'Zoop\Entity\DispatchListener',
             'zoop.commerce.entity.filterlistener' => 'Zoop\Entity\EntityFilterListener',
             'zoop.commerce.entity.enforcersubscriber' => 'Zoop\Entity\EntityEnforcerSubscriber',
-            'zoop.commerce.entity.listener.updateusers' => 'Zoop\Entity\Controller\UpdateUsersListener',
+            'zoop.commerce.entity.usersubscriber' => 'Zoop\Entity\EntityUserSubscriber',
         ],
         'factories' => [
         ],

@@ -29,8 +29,8 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
      */
     public function attach(EventManagerInterface $events)
     {
-        $this->listeners[] = $events->attach(UserEvents::USER_POST_AUTH, [$this, 'doUserStoreFilter'], 1);
-        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'doOriginStoreFilter'], 1);
+        $this->listeners[] = $events->attach(UserEvents::USER_POST_AUTH, [$this, 'doUserEntityFilter'], 1);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'doOriginEntityFilter'], 1);
     }
 
     /**
@@ -54,7 +54,7 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
      * @param EventInterface $event
      * @return mixed
      */
-    public function doUserStoreFilter(EventInterface $event)
+    public function doUserEntityFilter(EventInterface $event)
     {
         $user = $event->getParams();
         if ($user instanceof EntityFilterInterface) {
@@ -74,7 +74,7 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
      * @param EventInterface $event
      * @return mixed
      */
-    public function doOriginStoreFilter(EventInterface $event)
+    public function doOriginEntityFilter(EventInterface $event)
     {
         $serviceManager = $this->getServiceLocator();
 
