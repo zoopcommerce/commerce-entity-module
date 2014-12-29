@@ -22,9 +22,7 @@ class ActiveEntity extends AbstractPlugin
     }
 
     /**
-     *
      * @return mixed|null
-     * @throws Exception\RuntimeException
      */
     public function __invoke()
     {

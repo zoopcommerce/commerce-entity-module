@@ -82,11 +82,11 @@ class EntityUserSubscriber implements
                     $document->setEntities($entities);
                 }
             } else {
-                throw new MissingEntityFilterException('This document requires a entity filter');
+                throw new MissingEntityFilterException('This document requires an entity filter');
             }
         } else {
             //if not, throw an error
-            throw new MissingEntityFilterException('This document requires a entity filter');
+            throw new MissingEntityFilterException('This document requires an entity filter');
         }
     }
 

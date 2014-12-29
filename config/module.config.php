@@ -37,7 +37,7 @@ return array(
                                 'zoop.shardmodule.listener.prepareviewmodel'
                             ],
                             'delete' => [
-                                'zoop.shardmodule.listener.delete',
+                                'zoop.api.listener.delete',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -93,7 +93,7 @@ return array(
                                 'zoop.shardmodule.listener.prepareviewmodel'
                             ],
                             'delete' => [
-                                'zoop.shardmodule.listener.delete',
+                                'zoop.api.listener.delete',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -149,7 +149,7 @@ return array(
                                 'zoop.shardmodule.listener.prepareviewmodel'
                             ],
                             'delete' => [
-                                'zoop.shardmodule.listener.delete',
+                                'zoop.api.listener.delete',
                                 'zoop.api.listener.cors',
                                 'zoop.shardmodule.listener.flush',
                                 'zoop.shardmodule.listener.prepareviewmodel'
@@ -193,6 +193,15 @@ return array(
                     ],
                 ]
             ],
+        ],
+        'maggott' => [
+            'exception_map' => [
+                'Zoop\Entity\Exception\MissingEntityFilterException' => [
+                    'described_by' => 'document-entity-not-found',
+                    'title' => 'The document entity is missing',
+                    'status_code' => 500
+                ],
+            ]
         ],
     ],
     'router' => [

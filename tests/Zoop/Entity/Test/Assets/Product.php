@@ -2,8 +2,8 @@
 
 namespace Zoop\Entity\Test\Assets;
 
-use Zoop\Store\DataModel\StoresTrait;
-use Zoop\Store\DataModel\StoresTraitInterface;
+use Zoop\Entity\DataModel\EntitiesFilterInterface;
+use Zoop\Entity\DataModel\EntitiesTrait;
 //Annotation imports
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use Zoop\Shard\Annotation\Annotations as Shard;
@@ -11,9 +11,9 @@ use Zoop\Shard\Annotation\Annotations as Shard;
 /**
  * @ODM\Document
  */
-class Product implements StoresTraitInterface
+class Product implements EntitiesFilterInterface
 {
-    use StoresTrait;
+    use EntitiesTrait;
 
     /**
      * @ODM\Id

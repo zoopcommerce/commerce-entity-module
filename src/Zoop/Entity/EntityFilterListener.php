@@ -9,7 +9,7 @@ use Zend\Http\Request as HttpRequest;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorAwareTrait;
-use Zoop\Entity\DataModel\EntityFilterInterface;
+use Zoop\Entity\DataModel\EntitiesFilterInterface;
 use Zoop\User\Events as UserEvents;
 
 class EntityFilterListener implements ListenerAggregateInterface, ServiceLocatorAwareInterface
@@ -57,13 +57,14 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
     public function doUserEntityFilter(EventInterface $event)
     {
         $user = $event->getParams();
-        if ($user instanceof EntityFilterInterface) {
+        if ($user instanceof EntitiesFilterInterface) {
             $serviceManager = $this->getServiceLocator();
             $manifest = $serviceManager->get('shard.commerce.manifest');
             $zone = $manifest->getServiceManager()->get('extension.zone');
 
             $entities = $user->getEntities();
-            $zone->setReadFilterInclude($entities);
+            $existingFilters = $zone->getReadFilterInclude();
+            $zone->setReadFilterInclude(array_merge($existingFilters, $entities));
         }
     }
 
@@ -73,6 +74,8 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
      *
      * @param EventInterface $event
      * @return mixed
+     * 
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function doOriginEntityFilter(EventInterface $event)
     {
@@ -86,7 +89,14 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
                 $zone = $manifest->getServiceManager()->get('extension.zone');
 
                 $entity = $serviceManager->get('zoop.commerce.entity.active');
-                $zone->setReadFilterInclude([$entity->getId()]);
+                if ($entity instanceof EntitiesFilterInterface) {
+                    $existingFilters = $zone->getReadFilterInclude();
+                    $entityFilter = $entity->getId();
+                    if (!in_array($entityFilter, $existingFilters)) {
+                        $existingFilters[] = $entityFilter;
+                    }
+                    $zone->setReadFilterInclude($existingFilters);
+                }
             }
         }
     }

@@ -8,7 +8,7 @@ use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zoop\GomiModule\DataModel\User;
 use Zoop\Entity\DataModel\Entity;
-use Zoop\Entity\Exception\EntityNotFoundException;
+use Zoop\ShardModule\Exception\DocumentNotFoundException;
 use Zoop\Shard\ODMCore\ModelManager;
 
 class ActiveEntityFactory implements AbstractFactoryInterface
@@ -25,7 +25,7 @@ class ActiveEntityFactory implements AbstractFactoryInterface
      * @param string $requestedName
      * @return boolean
      * @throws Exception
-     * @throws EntityNotFoundException
+     * @throws DocumentNotFoundException
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
@@ -43,12 +43,12 @@ class ActiveEntityFactory implements AbstractFactoryInterface
         $host = $this->getHostFromRequest($request);
 
         if (!isset($host)) {
-            throw new EntityNotFoundException('The entity could not be found within the request host');
+            throw new DocumentNotFoundException('The entity could not be found within the request host', 404);
         }
         $activeEntity = $this->loadEntity($host, $serviceLocator);
 
         if (is_null($activeEntity)) {
-            throw new EntityNotFoundException('The entity ' . $host . ' could not be found');
+            throw new DocumentNotFoundException('The entity ' . $host . ' could not be found', 404);
         }
 
         return true;

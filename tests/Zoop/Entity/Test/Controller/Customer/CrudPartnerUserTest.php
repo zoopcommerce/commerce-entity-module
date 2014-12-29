@@ -1,6 +1,6 @@
 <?php
 
-namespace Zoop\Entity\Test\Controller;
+namespace Zoop\Entity\Test\Controller\Customer;
 
 use Zend\Http\Header\Origin;
 use Zend\Http\Header\Host;
@@ -8,12 +8,15 @@ use Zoop\Entity\Test\AbstractTest;
 use Zoop\Customer\DataModel\Customer;
 use Zoop\Test\Helper\DataHelper;
 
-class CustomerCrudTest extends AbstractTest
+class CrudPartnerUserTest extends AbstractTest
 {
+    const USER_KEY = 'michaelebpwotz';
+    const USER_SECRET = 'password1';
+
     public function testNoAuthorizationCreate()
     {
         DataHelper::createPartner(self::getNoAuthDocumentManager(), self::getDbName());
-        
+
         $data = [
             "name" => "Nespresso",
             "email" => "info@nespresso.com",
@@ -44,7 +47,6 @@ class CustomerCrudTest extends AbstractTest
             ]);
 
         $this->dispatch('http://api.zoopcommerce.local/customers');
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(403);
     }
@@ -53,7 +55,7 @@ class CustomerCrudTest extends AbstractTest
     {
         DataHelper::createEntities(self::getNoAuthDocumentManager(), self::getDbName());
         DataHelper::createCustomerUser(self::getNoAuthDocumentManager(), self::getDbName());
-        
+
         $data = [
             "name" => "Nespresso",
             "email" => "info@nespresso.com",
@@ -72,14 +74,11 @@ class CustomerCrudTest extends AbstractTest
             ]
         ];
 
-        $key = 'nespresso';
-        $secret = 'password1';
-
         $request = $this->getRequest();
         $request->setContent(json_encode($data));
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, 'nespresso', 'wrong-password');
 
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
@@ -96,7 +95,7 @@ class CustomerCrudTest extends AbstractTest
     public function testCreateSuccess()
     {
         DataHelper::createPartnerUser(self::getNoAuthDocumentManager(), self::getDbName());
-        
+
         $name = "Nespresso";
         $data = [
             "name" => $name,
@@ -116,15 +115,12 @@ class CustomerCrudTest extends AbstractTest
             ]
         ];
 
-        $key = 'michaelebpwotz';
-        $secret = 'password1';
-
         $post = json_encode($data);
         $request = $this->getRequest();
         $request->setContent($post);
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
@@ -153,19 +149,16 @@ class CustomerCrudTest extends AbstractTest
 
         return $customerId;
     }
-    
+
     /**
      * @depends testCreateSuccess
      */
     public function testGetListSuccess()
     {
-        $key = 'michaelebpwotz';
-        $secret = 'password1';
-
         $request = $this->getRequest();
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('GET')
             ->getHeaders()->addHeaders([
@@ -175,19 +168,47 @@ class CustomerCrudTest extends AbstractTest
 
         $this->dispatch('http://api.zoopcommerce.local/customers');
         $response = $this->getResponse();
-        
+
         $this->assertResponseStatusCode(200);
         $content = $response->getContent();
         $this->assertJson($content);
-        
+
         $data = json_decode($content, true);
         $this->assertCount(1, $data);
-        
+
         $customer = $data[0];
         $this->assertEquals('Nespresso', $customer['name']);
         $this->assertEquals('nestle.zoopcommerce.local', $customer['primaryDomain']);
 
         self::getNoAuthDocumentManager()->clear();
+    }
+
+    /**
+     * @depends testCreateSuccess
+     */
+    public function testGetSuccess($customerId)
+    {
+        $request = $this->getRequest();
+
+        $this->applyJsonRequest($request);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
+
+        $request->setMethod('GET')
+            ->getHeaders()->addHeaders([
+                Origin::fromString('Origin: http://bigspaceship.com'),
+                Host::fromString('Host: bigspaceship.com')
+            ]);
+
+        $this->dispatch(sprintf('http://api.zoopcommerce.local/customers/%s', $customerId));
+        $response = $this->getResponse();
+
+        $this->assertResponseStatusCode(200);
+        $content = $response->getContent();
+        $this->assertJson($content);
+
+        $customer = json_decode($content, true);
+        $this->assertEquals('Nespresso', $customer['name']);
+        $this->assertEquals('nestle.zoopcommerce.local', $customer['primaryDomain']);
     }
 
     /**
@@ -210,14 +231,11 @@ class CustomerCrudTest extends AbstractTest
             ]
         ];
 
-        $key = 'michaelebpwotz';
-        $secret = 'password1';
-
         $request = $this->getRequest();
         $request->setContent(json_encode($data));
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('PATCH')
             ->getHeaders()->addHeaders([
@@ -244,13 +262,10 @@ class CustomerCrudTest extends AbstractTest
      */
     public function testDeleteSuccess($customerId)
     {
-        $key = 'michaelebpwotz';
-        $secret = 'password1';
-
         $request = $this->getRequest();
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('DELETE')
             ->getHeaders()->addHeaders([
@@ -259,13 +274,13 @@ class CustomerCrudTest extends AbstractTest
             ]);
 
         $this->dispatch(sprintf('http://api.zoopcommerce.local/customers/%s', $customerId));
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(204);
 
-        //we need to just do a soft delete rather than a hard delete
         self::getNoAuthDocumentManager()->clear();
+
         $customer = DataHelper::get(self::getNoAuthDocumentManager(), 'Zoop\Customer\DataModel\Customer', $customerId);
-        $this->assertEmpty($customer);
+        $this->assertNotEmpty($customer);
+        $this->assertTrue($this->isSoftDeleted($customer));
     }
 }

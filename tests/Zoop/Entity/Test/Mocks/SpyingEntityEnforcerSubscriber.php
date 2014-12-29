@@ -3,8 +3,8 @@
 namespace Zoop\Entity\Test\Mocks;
 
 use Zoop\Entity\EntityEnforcerSubscriber;
-use Zoop\Entity\DataModel\EntityTraitInterface;
-use Zoop\Entity\DataModel\EntitiesTraitInterface;
+use Zoop\Entity\DataModel\EntitiesFilterInterface;
+use Zoop\Entity\DataModel\EntityFilterInterface;
 
 /**
  *
@@ -27,12 +27,12 @@ class SpyingEntityEnforcerSubscriber extends EntityEnforcerSubscriber
         return $this->doApplyEntitiesTrait;
     }
 
-    protected function applyEntityTrait(EntityTraitInterface $document)
+    protected function addEntityToDocument(EntityFilterInterface $document)
     {
         $this->doApplyEntityTrait = true;
     }
 
-    protected function applyEntitiesTrait(EntitiesTraitInterface $document)
+    protected function addEntitiesToDocument(EntitiesFilterInterface $document)
     {
         $this->doApplyEntitiesTrait = true;
     }

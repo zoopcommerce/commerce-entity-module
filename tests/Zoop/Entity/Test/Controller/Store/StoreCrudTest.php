@@ -1,6 +1,6 @@
 <?php
 
-namespace Zoop\Entity\Test\Controller;
+namespace Zoop\Entity\Test\Controller\Store;
 
 use Zend\Http\Header\Origin;
 use Zend\Http\Header\Host;
@@ -10,11 +10,13 @@ use Zoop\Test\Helper\DataHelper;
 
 class StoreCrudTest extends AbstractTest
 {
-    private static $zoopUserKey = 'joshstuart';
-    private static $zoopUserSecret = 'password1';
+    const USER_KEY = 'joshstuart';
+    const USER_SECRET = 'password1';
 
     public function testNoAuthorizationCreate()
     {
+        DataHelper::createEntities(self::getNoAuthDocumentManager(), self::getDbName());
+
         $data = [
             "slug" => "tesla",
             "name" => "Tesla",
@@ -34,13 +36,12 @@ class StoreCrudTest extends AbstractTest
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
                 Origin::fromString('Origin: http://blanka.local'),
-                Host::fromString('Host: api.zoopcommerce.local')
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch('http://api.zoopcommerce.local/stores');
-        $response = $this->getResponse();
 
-        $this->assertResponseStatusCode(401);
+        $this->assertResponseStatusCode(403);
     }
 
     public function testCreateSuccess()
@@ -60,7 +61,6 @@ class StoreCrudTest extends AbstractTest
             "email" => "info@teslamotors.com.au"
         ];
 
-        DataHelper::createEntities(self::getNoAuthDocumentManager(), self::getDbName());
         DataHelper::createZoopUser(self::getNoAuthDocumentManager(), self::getDbName());
 
         $post = json_encode($data);
@@ -68,12 +68,12 @@ class StoreCrudTest extends AbstractTest
         $request->setContent($post);
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, self::$zoopUserKey, self::$zoopUserSecret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
                 Origin::fromString('Origin: http://blanka.local'),
-                Host::fromString('Host: api.zoopcommerce.local')
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch('http://api.zoopcommerce.local/stores');
@@ -108,12 +108,12 @@ class StoreCrudTest extends AbstractTest
         $request = $this->getRequest();
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, self::$zoopUserKey, self::$zoopUserSecret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('GET')
             ->getHeaders()->addHeaders([
                 Origin::fromString('Origin: http://blanka.local'),
-                Host::fromString('Host: api.zoopcommerce.local')
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch('http://api.zoopcommerce.local/stores');
@@ -126,7 +126,7 @@ class StoreCrudTest extends AbstractTest
 
         $content = json_decode($json, true);
 
-        $this->assertCount(8, $content);
+        $this->assertCount(6, $content);
 
         $store = $content[0];
 
@@ -146,12 +146,12 @@ class StoreCrudTest extends AbstractTest
         $request = $this->getRequest();
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, self::$zoopUserKey, self::$zoopUserSecret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('GET')
             ->getHeaders()->addHeaders([
-                                Origin::fromString('Origin: http://blanka.local'),
-                Host::fromString('Host: api.zoopcommerce.local')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch(sprintf('http://api.zoopcommerce.local/stores/%s', $storeId));
@@ -193,16 +193,15 @@ class StoreCrudTest extends AbstractTest
         $request->setContent(json_encode($data));
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, self::$zoopUserKey, self::$zoopUserSecret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('PATCH')
             ->getHeaders()->addHeaders([
-                                Origin::fromString('Origin: http://blanka.local'),
-                Host::fromString('Host: api.zoopcommerce.local')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch(sprintf('http://api.zoopcommerce.local/stores/%s', $storeId));
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(204);
 
@@ -223,22 +222,22 @@ class StoreCrudTest extends AbstractTest
         $request = $this->getRequest();
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, self::$zoopUserKey, self::$zoopUserSecret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('DELETE')
             ->getHeaders()->addHeaders([
-                                Origin::fromString('Origin: http://blanka.local'),
-                Host::fromString('Host: api.zoopcommerce.local')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch(sprintf('http://api.zoopcommerce.local/stores/%s', $storeId));
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(204);
 
-        //we need to just do a soft delete rather than a hard delete
         self::getNoAuthDocumentManager()->clear();
+
         $store = DataHelper::get(self::getNoAuthDocumentManager(), 'Zoop\Store\DataModel\Store', $storeId);
-        $this->assertEmpty($store);
+        $this->assertNotEmpty($store);
+        $this->assertTrue($this->isSoftDeleted($store));
     }
 }

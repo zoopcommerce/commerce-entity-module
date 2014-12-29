@@ -1,6 +1,6 @@
 <?php
 
-namespace Zoop\Entity\Test\Controller;
+namespace Zoop\Entity\Test\Controller\Partner;
 
 use Zend\Http\Header\Origin;
 use Zend\Http\Header\Host;
@@ -8,90 +8,44 @@ use Zoop\Entity\Test\AbstractTest;
 use Zoop\Partner\DataModel\Partner;
 use Zoop\Test\Helper\DataHelper;
 
-class PartnerCrudTest extends AbstractTest
+class CrudSystemUserTest extends AbstractTest
 {
+    const USER_KEY = 'joshstuart';
+    const USER_SECRET = 'password1';
+
     public function testNoAuthorizationCreate()
     {
         DataHelper::createEntities(self::getNoAuthDocumentManager(), self::getDbName());
 
-        $data = [
-            "name" => "Big Spaceship",
-            "email" => "info@bigspaceship.com",
-            "phoneNumber" => "+1 718 222 0281",
-            "address" => [
-                "line1" => "45 Main St. Suite 716",
-                "line2" => "",
-                "city" => "Brooklyn",
-                "state" => "NY",
-                "postcode" => "11201",
-                "country" => "US"
-            ]
-        ];
-
         $request = $this->getRequest();
-        $request->setContent(json_encode($data));
+        $request->setContent(json_encode([]));
 
         $this->applyJsonRequest($request);
 
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
-                Origin::fromString('Origin: http://blanka.com'),
-                Host::fromString('Host: blanka.com')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch('http://api.zoopcommerce.local/partners');
-        $response = $this->getResponse();
-
-        //TODO: CHANGE THIS TO 401
-        $this->assertResponseStatusCode(403);
-    }
-
-    public function testUnAuthorizedCreate()
-    {
-        $data = [
-            "name" => "Big Spaceship",
-            "email" => "info@bigspaceship.com",
-            "phoneNumber" => "+1 718 222 0281",
-            "address" => [
-                "line1" => "45 Main St. Suite 716",
-                "line2" => "",
-                "city" => "Brooklyn",
-                "state" => "NY",
-                "postcode" => "11201",
-                "country" => "US"
-            ]
-        ];
-
-        DataHelper::createPartnerUser(self::getNoAuthDocumentManager(), self::getDbName());
-
-        $key = 'bigspaceship';
-        $secret = 'password1';
-
-        $request = $this->getRequest();
-        $request->setContent(json_encode($data));
-
-        $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
-
-        $request->setMethod('POST')
-            ->getHeaders()->addHeaders([
-                Origin::fromString('Origin: http://blanka.com'),
-                Host::fromString('Host: blanka.com')
-            ]);
-
-        $this->dispatch('http://api.zoopcommerce.local/partners');
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(403);
     }
 
     public function testCreateSuccess()
     {
+        DataHelper::createZoopUser(self::getNoAuthDocumentManager(), self::getDbName());
+
         $name = "Big Spaceship";
         $data = [
             "name" => $name,
             "email" => "info@bigspaceship.com",
             "phoneNumber" => "+1 718 222 0281",
+            "primaryDomain" => "bigspaceship.com",
+            "domains" => [
+                "bigspaceship.com"
+            ],
             "address" => [
                 "line1" => "45 Main St. Suite 716",
                 "line2" => "",
@@ -102,21 +56,16 @@ class PartnerCrudTest extends AbstractTest
             ]
         ];
 
-        DataHelper::createZoopUser(self::getNoAuthDocumentManager(), self::getDbName());
-
-        $key = 'joshstuart';
-        $secret = 'password1';
-
         $request = $this->getRequest();
         $request->setContent(json_encode($data));
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('POST')
             ->getHeaders()->addHeaders([
-                Origin::fromString('Origin: http://blanka.com'),
-                Host::fromString('Host: blanka.com')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch('http://api.zoopcommerce.local/partners');
@@ -144,6 +93,69 @@ class PartnerCrudTest extends AbstractTest
     /**
      * @depends testCreateSuccess
      */
+    public function testGetListSuccess()
+    {
+        $request = $this->getRequest();
+
+        $this->applyJsonRequest($request);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
+
+        $request->setMethod('GET')
+            ->getHeaders()->addHeaders([
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
+            ]);
+
+        $this->dispatch('http://api.zoopcommerce.local/partners');
+        $response = $this->getResponse();
+
+        $this->assertResponseStatusCode(200);
+        $content = $response->getContent();
+        $this->assertJson($content);
+
+        $data = json_decode($content, true);
+        $this->assertCount(2, $data);
+
+        $partner = $data[0];
+        $this->assertEquals('Authentic Entertainment', $partner['name']);
+        $this->assertEquals('authenticentertainment.com.au', $partner['domains'][0]);
+
+        $partner = $data[1];
+        $this->assertEquals('Big Spaceship', $partner['name']);
+        $this->assertEquals('bigspaceship.com', $partner['domains'][0]);
+    }
+
+    /**
+     * @depends testCreateSuccess
+     */
+    public function testGetSuccess($partnerId)
+    {
+        $request = $this->getRequest();
+
+        $this->applyJsonRequest($request);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
+
+        $request->setMethod('GET')
+            ->getHeaders()->addHeaders([
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
+            ]);
+
+        $this->dispatch(sprintf('http://api.zoopcommerce.local/partners/%s', $partnerId));
+        $response = $this->getResponse();
+
+        $this->assertResponseStatusCode(200);
+        $content = $response->getContent();
+        $this->assertJson($content);
+
+        $data = json_decode($content, true);
+        $this->assertEquals('Big Spaceship', $data['name']);
+        $this->assertEquals('bigspaceship.com', $data['domains'][0]);
+    }
+
+    /**
+     * @depends testCreateSuccess
+     */
     public function testPatchSuccess($partnerId)
     {
         $name = "Big Spaceship 2";
@@ -161,23 +173,19 @@ class PartnerCrudTest extends AbstractTest
             ]
         ];
 
-        $key = 'joshstuart';
-        $secret = 'password1';
-
         $request = $this->getRequest();
         $request->setContent(json_encode($data));
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('PATCH')
             ->getHeaders()->addHeaders([
-                Origin::fromString('Origin: http://blanka.com'),
-                Host::fromString('Host: blanka.com')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch(sprintf('http://api.zoopcommerce.local/partners/%s', $partnerId));
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(204);
 
@@ -194,22 +202,18 @@ class PartnerCrudTest extends AbstractTest
      */
     public function testDeleteSuccess($partnerId)
     {
-        $key = 'joshstuart';
-        $secret = 'password1';
-
         $request = $this->getRequest();
 
         $this->applyJsonRequest($request);
-        $this->applyUserToRequest($request, $key, $secret);
+        $this->applyUserToRequest($request, self::USER_KEY, self::USER_SECRET);
 
         $request->setMethod('DELETE')
             ->getHeaders()->addHeaders([
-                Origin::fromString('Origin: http://blanka.com'),
-                Host::fromString('Host: blanka.com')
+                Origin::fromString('Origin: http://blanka.local'),
+                Host::fromString('Host: blanka.local')
             ]);
 
         $this->dispatch(sprintf('http://api.zoopcommerce.local/partners/%s', $partnerId));
-        $response = $this->getResponse();
 
         $this->assertResponseStatusCode(204);
 
@@ -217,6 +221,7 @@ class PartnerCrudTest extends AbstractTest
         self::getNoAuthDocumentManager()->clear();
 
         $partner = DataHelper::get(self::getNoAuthDocumentManager(), 'Zoop\Partner\DataModel\Partner', $partnerId);
-        $this->assertEmpty($partner);
+        $this->assertNotEmpty($partner);
+        $this->assertTrue($this->isSoftDeleted($partner));
     }
 }

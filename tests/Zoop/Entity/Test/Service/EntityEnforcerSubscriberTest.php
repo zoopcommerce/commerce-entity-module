@@ -2,7 +2,6 @@
 
 namespace Zoop\Entity\Test\Service;
 
-use Zoop\Entity\Exception\MissingEntityFilterException;
 use Zoop\Entity\Test\AbstractTest;
 use Zoop\Entity\Test\Mocks\SpyingEntityEnforcerSubscriber;
 use Zoop\Entity\EntityEnforcerSubscriber;
@@ -33,10 +32,10 @@ class EntityEnforcerSubscriberTest extends AbstractTest
 
         $enforcer->prePersist($mocLifecycle);
 
-        $this->assertTrue($enforcer->getDoApplyStoreTrait());
+        $this->assertTrue($enforcer->getDoApplyEntityTrait());
     }
 
-    public function testPrePersistStoresTrait()
+    public function testPrePersistEntitiesTrait()
     {
         $mocDocument = $this->getMock('Zoop\\Entity\\Test\\Assets\\Product');
         $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
@@ -94,11 +93,11 @@ class EntityEnforcerSubscriberTest extends AbstractTest
 
         $enforcer->prePersist($mocLifecycle);
 
-        $this->assertNotEmpty($order->getStore());
-        $this->assertEquals('apple', $order->getStore());
+        $this->assertNotEmpty($order->getEntity());
+        $this->assertEquals('apple', $order->getEntity());
     }
 
-    public function testApplyStoreTraitActiveUser()
+    public function testApplyEntityTraitActiveUser()
     {
         $order = new Order;
         $order->setName('Test');
@@ -134,8 +133,8 @@ class EntityEnforcerSubscriberTest extends AbstractTest
 
         $enforcer->prePersist($mocLifecycle);
 
-        $this->assertNotEmpty($order->getStore());
-        $this->assertEquals('apple', $order->getStore());
+        $this->assertNotEmpty($order->getEntity());
+        $this->assertEquals('apple', $order->getEntity());
     }
 
     public function testApplyEntitiesTraitActiveStore()
@@ -172,8 +171,8 @@ class EntityEnforcerSubscriberTest extends AbstractTest
 
         $enforcer->prePersist($mocLifecycle);
 
-        $this->assertNotEmpty($product->getStores());
-        $this->assertEquals(['apple'], $product->getStores());
+        $this->assertNotEmpty($product->getEntities());
+        $this->assertEquals(['apple'], $product->getEntities());
     }
 
     public function testApplyEntitiesTraitActiveUser()
@@ -213,8 +212,8 @@ class EntityEnforcerSubscriberTest extends AbstractTest
 
         $enforcer->prePersist($mocLifecycle);
 
-        $this->assertNotEmpty($product->getStores());
-        $this->assertEquals($stores, $product->getStores());
+        $this->assertNotEmpty($product->getEntities());
+        $this->assertEquals($stores, $product->getEntities());
     }
 
     /**

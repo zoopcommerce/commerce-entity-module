@@ -7,10 +7,10 @@ use Zend\Http\Header\ContentType;
 use Zend\Http\Header\GenericHeader;
 use Zend\Test\PHPUnit\Controller\AbstractHttpControllerTestCase;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Zoop\GomiModule\DataModel\User;
 use Zoop\Shard\Core\Events;
 use Zoop\Shard\Manifest;
 use Zoop\Shard\Serializer\Unserializer;
+use Zoop\Shard\SoftDelete\SoftDeleter;
 
 abstract class AbstractTest extends AbstractHttpControllerTestCase
 {
@@ -20,6 +20,7 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
     protected static $manifest;
     protected static $unserializer;
     protected static $serializer;
+    protected static $softDeleter;
     public $calls;
 
     public function setUp()
@@ -46,6 +47,9 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
 
             self::$serializer = self::$manifest->getServiceManager()
                 ->get('serializer');
+
+            self::$softDeleter = self::$manifest->getServiceManager()
+                ->get('softDeleter');
 
             $eventManager = self::$documentManager->getEventManager();
             $eventManager->addEventListener(Events::EXCEPTION, $this);
@@ -99,6 +103,15 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
 
     /**
      *
+     * @return SoftDeleter
+     */
+    public static function getSoftDeleter()
+    {
+        return self::$softDeleter;
+    }
+
+    /**
+     *
      * @return Manifest
      */
     public static function getManifest()
@@ -120,6 +133,13 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
         $this->calls[$name] = $arguments;
     }
 
+    /**
+     * Adds user auth to headers
+     *
+     * @param mixed $request
+     * @param string $key
+     * @param string $secret
+     */
     public function applyUserToRequest($request, $key, $secret)
     {
         $request->getHeaders()->addHeaders([
@@ -127,6 +147,11 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
             ]);
     }
 
+    /**
+     * Adds json headers to the request
+     *
+     * @param mixed $request
+     */
     public function applyJsonRequest($request)
     {
         $accept = new Accept;
@@ -137,5 +162,25 @@ abstract class AbstractTest extends AbstractHttpControllerTestCase
                 $accept,
                 ContentType::fromString('Content-type: application/json'),
             ]);
+    }
+
+    /**
+     * Tests whether a document has been soft deleted or not
+     * @param mixed $document
+     * @return boolean
+     */
+    public function isSoftDeleted($document)
+    {
+        //this isn't working for some reason
+        $softDeleter = $this->getSoftDeleter();
+        $metadata = $this->getDocumentManager()
+            ->getClassMetadata(get_class($document));
+
+        //this is just a temp fix
+        $class = new \ReflectionClass($document);
+        $property = $class->getProperty('softDeleted');
+        $property->setAccessible(true);
+        $isSoftDeleted = $property->getValue($document);
+        return (boolean) $isSoftDeleted;
     }
 }

@@ -27,21 +27,26 @@ class EntityEnforcerSubscriber implements
 
     /**
      * Listen to the "create" and "update" event to ensure
-     * that if we have a filter on the entity, it is correctly enforced
+     * that if we have a zone filter on the entity, it is correctly enforced
      */
     public function prePersist(LifecycleEventArgs $args)
     {
         $document = $args->getDocument();
 
         if ($document instanceof EntityFilterInterface) {
-            $this->applyEntityTrait($document);
+            $this->addEntityToDocument($document);
         } elseif ($document instanceof EntitiesFilterInterface) {
-            $this->applyEntitiesTrait($document);
+            $this->addEntitiesToDocument($document);
         }
         //TODO apply the store/s filter
     }
 
-    protected function applyEntityTrait(EntityFilterInterface $document)
+    protected function addDocumentIdToFilter(EntitiesFilterInterface $document)
+    {
+        $document->addEntity($document->getId());
+    }
+
+    protected function addEntityToDocument(EntityFilterInterface $document)
     {
         //check to see if we have an active entity
         $entity = $this->getActiveEntity();
@@ -52,28 +57,32 @@ class EntityEnforcerSubscriber implements
             }
         } else {
             //if not, check the user for allowed entities
-            $this->applyUserEntityToDocument($document);
+            $this->addUserEntityToDocument($document);
         }
     }
 
-    protected function applyEntitiesTrait(EntitiesFilterInterface $document)
+    protected function addEntitiesToDocument(EntitiesFilterInterface $document)
     {
         $entity = $this->getActiveEntity();
         if ($entity !== false) {
-            $entities = $document->getEntities();
-            if (!in_array($entity->getSlug(), $entities)) {
-                $document->addEntity($entity->getSlug());
+            //only apply the entity if the active entity
+            //is also an entity filter
+            if ($entity instanceof EntitiesFilterInterface) {
+                $document->addEntity($entity->getId());
             }
         } else {
             //if not, check the user for allowed entities
-            $this->applyUserEntityToDocument($document);
+            $this->addUserEntityToDocument($document);
         }
+
+        //ensure the document ID was also added to the filter
+        $this->addDocumentIdToFilter($document);
     }
 
-    protected function applyUserEntityToDocument($document)
+    protected function addUserEntityToDocument($document)
     {
         $user = $this->getUser();
-        if ($user instanceof UserInterface && $user instanceof FilterEntityInterface) {
+        if ($user instanceof UserInterface && $user instanceof EntitiesFilterInterface) {
             $entities = $user->getEntities();
             if (!empty($entities)) {
                 if ($document instanceof EntityFilterInterface) {
@@ -86,7 +95,7 @@ class EntityEnforcerSubscriber implements
             }
         } else {
             //if not, throw an error
-            throw new MissingEntityFilterException('This document requires a entity filter');
+            throw new MissingEntityFilterException('This document requires an entity filter');
         }
     }
 
