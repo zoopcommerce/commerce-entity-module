@@ -177,13 +177,13 @@ class EntityEnforcerSubscriberTest extends AbstractTest
 
     public function testApplyEntitiesTraitActiveUser()
     {
-        $stores = ['apple', 'demo'];
+        $entities = ['apple', 'demo'];
 
         $product = new Product;
         $product->setName('Test');
 
         $user = new Admin;
-        $user->setEntities($stores);
+        $user->setEntities($entities);
 
         $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
         $mocLifecycle = $this->getMock(
@@ -213,21 +213,21 @@ class EntityEnforcerSubscriberTest extends AbstractTest
         $enforcer->prePersist($mocLifecycle);
 
         $this->assertNotEmpty($product->getEntities());
-        $this->assertEquals($stores, $product->getEntities());
+        $this->assertEquals($entities, $product->getEntities());
     }
 
     /**
      * @expectedException \Zoop\Entity\Exception\MissingEntityFilterException
      */
-    public function testMissingStoreFilterException()
+    public function testMissingEntityFilterException()
     {
-        $stores = ['apple', 'demo'];
+        $entities = ['apple', 'demo'];
 
         $product = new Product;
         $product->setName('Test');
 
         $user = new Admin;
-        $user->setEntities($stores);
+        $user->setEntities($entities);
 
         $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
         $mocLifecycle = $this->getMock(
@@ -244,6 +244,178 @@ class EntityEnforcerSubscriberTest extends AbstractTest
         $map = [
             ['zoop.commerce.entity.active', false],
             ['user', false]
+        ];
+
+        $mocServiceLocator = $this->getMock('Zend\\ServiceManager\\ServiceLocatorInterface');
+        $mocServiceLocator->expects($this->any())
+            ->method('get')
+             ->will($this->returnValueMap($map));
+
+        $enforcer = new EntityEnforcerSubscriber;
+        $enforcer->setServiceLocator($mocServiceLocator);
+
+        $enforcer->prePersist($mocLifecycle);
+    }
+
+    /**
+     * @expectedException \Zoop\ShardModule\Exception\AccessControlException
+     */
+    public function testUserEntityAccessControlException()
+    {
+        $order = new Order;
+        $order->setName('Test');
+        $order->setPrice(100);
+        $order->setEntity('missing-entity');
+
+        $user = new Admin;
+        $user->setEntities(['apple', 'demo']);
+
+        $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
+        $mocLifecycle = $this->getMock(
+            'Doctrine\\ODM\\MongoDB\\Event\\LifecycleEventArgs',
+            null,
+            [
+                $order,
+                $mocObjectManager
+            ]
+        );
+        $mocLifecycle->method('getDocument')
+            ->willReturn($order);
+
+        $map = [
+            ['zoop.commerce.entity.active', false],
+            ['user', $user]
+        ];
+
+        $mocServiceLocator = $this->getMock('Zend\\ServiceManager\\ServiceLocatorInterface');
+        $mocServiceLocator->expects($this->any())
+            ->method('get')
+             ->will($this->returnValueMap($map));
+
+        $enforcer = new EntityEnforcerSubscriber;
+        $enforcer->setServiceLocator($mocServiceLocator);
+
+        $enforcer->prePersist($mocLifecycle);
+    }
+
+    /**
+     * @expectedException \Zoop\ShardModule\Exception\AccessControlException
+     */
+    public function testActiveEntityEntityAccessControlException()
+    {
+        $store = new Store;
+        $store->setSlug('apple');
+
+        $order = new Order;
+        $order->setName('Test');
+        $order->setPrice(100);
+        $order->setEntity('missing-entity');
+
+        $user = new Admin;
+        $user->setEntities(['apple', 'demo']);
+
+        $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
+        $mocLifecycle = $this->getMock(
+            'Doctrine\\ODM\\MongoDB\\Event\\LifecycleEventArgs',
+            null,
+            [
+                $order,
+                $mocObjectManager
+            ]
+        );
+        $mocLifecycle->method('getDocument')
+            ->willReturn($order);
+
+        $map = [
+            ['zoop.commerce.entity.active', $store],
+            ['user', $user]
+        ];
+
+        $mocServiceLocator = $this->getMock('Zend\\ServiceManager\\ServiceLocatorInterface');
+        $mocServiceLocator->expects($this->any())
+            ->method('get')
+             ->will($this->returnValueMap($map));
+
+        $enforcer = new EntityEnforcerSubscriber;
+        $enforcer->setServiceLocator($mocServiceLocator);
+
+        $enforcer->prePersist($mocLifecycle);
+    }
+
+    /**
+     * @expectedException \Zoop\ShardModule\Exception\AccessControlException
+     */
+    public function testUserEntitiesAccessControlException()
+    {
+        $entities = ['apple', 'demo'];
+
+        $product = new Product;
+        $product->setName('Test');
+        $product->setEntities(['missing-entity-1', 'apple', 'demo']);
+
+        $user = new Admin;
+        $user->setEntities($entities);
+
+        $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
+        $mocLifecycle = $this->getMock(
+            'Doctrine\\ODM\\MongoDB\\Event\\LifecycleEventArgs',
+            null,
+            [
+                $product,
+                $mocObjectManager
+            ]
+        );
+        $mocLifecycle->method('getDocument')
+            ->willReturn($product);
+
+        $map = [
+            ['zoop.commerce.entity.active', false],
+            ['user', $user]
+        ];
+
+        $mocServiceLocator = $this->getMock('Zend\\ServiceManager\\ServiceLocatorInterface');
+        $mocServiceLocator->expects($this->any())
+            ->method('get')
+             ->will($this->returnValueMap($map));
+
+        $enforcer = new EntityEnforcerSubscriber;
+        $enforcer->setServiceLocator($mocServiceLocator);
+
+        $enforcer->prePersist($mocLifecycle);
+    }
+
+    /**
+     * @expectedException \Zoop\ShardModule\Exception\AccessControlException
+     */
+    public function testActiveEntityEntitiesAccessControlException()
+    {
+        $store = new Store;
+        $store->setSlug('apple');
+        
+        $entities = ['apple', 'demo'];
+
+        $product = new Product;
+        $product->setName('Test');
+        $product->setEntities(['missing-entity-1', 'apple', 'demo']);
+
+        $user = new Admin;
+        $user->setEntities($entities);
+
+        $mocObjectManager = $this->getMock('Doctrine\\Common\\Persistence\\ObjectManager');
+        $mocLifecycle = $this->getMock(
+            'Doctrine\\ODM\\MongoDB\\Event\\LifecycleEventArgs',
+            null,
+            [
+                $product,
+                $mocObjectManager
+            ]
+        );
+        $mocLifecycle->method('getDocument')
+            ->willReturn($product);
+
+        $map = [
+            ['zoop.commerce.entity.active', $store],
+            ['user', $user]
         ];
 
         $mocServiceLocator = $this->getMock('Zend\\ServiceManager\\ServiceLocatorInterface');
