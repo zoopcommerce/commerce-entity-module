@@ -74,7 +74,7 @@ class EntityFilterListener implements ListenerAggregateInterface, ServiceLocator
      *
      * @param EventInterface $event
      * @return mixed
-     * 
+     *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function doOriginEntityFilter(EventInterface $event)

@@ -219,7 +219,6 @@ return array(
             'zoop.commerce.entity.dispatchlistener' => 'Zoop\Entity\DispatchListener',
             'zoop.commerce.entity.filterlistener' => 'Zoop\Entity\EntityFilterListener',
             'zoop.commerce.entity.enforcersubscriber' => 'Zoop\Entity\EntityEnforcerSubscriber',
-            'zoop.commerce.entity.usersubscriber' => 'Zoop\Entity\EntityUserSubscriber',
         ],
         'factories' => [
         ],

@@ -24,7 +24,7 @@ class ActiveEntityTest extends AbstractTest
         $this->assertEquals('authenticentertainment', $partner->getSlug());
         $this->assertEquals('info@authenticentertainment.com.au', $partner->getEmail());
     }
-    
+
     public function testGetActiveCustomer()
     {
         $request = $this->getApplicationServiceLocator()->get('request');
@@ -39,7 +39,7 @@ class ActiveEntityTest extends AbstractTest
         $this->assertEquals('apple', $customer->getSlug());
         $this->assertEquals('info@apple.com', $customer->getEmail());
     }
-    
+
     public function testGetActiveStore()
     {
         $request = $this->getApplicationServiceLocator()->get('request');

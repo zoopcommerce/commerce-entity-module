@@ -391,7 +391,7 @@ class EntityEnforcerSubscriberTest extends AbstractTest
     {
         $store = new Store;
         $store->setSlug('apple');
-        
+
         $entities = ['apple', 'demo'];
 
         $product = new Product;

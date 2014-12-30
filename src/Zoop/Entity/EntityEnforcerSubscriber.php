@@ -9,6 +9,8 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorAwareTrait;
 use Zoop\Entity\DataModel\EntitiesFilterInterface;
 use Zoop\Entity\DataModel\EntityFilterInterface;
+use Zoop\Entity\DataModel\EntityInterface;
+use Zoop\Entity\Events;
 use Zoop\Entity\Exception\MissingEntityFilterException;
 use Zoop\ShardModule\Exception\AccessControlException;
 use Zoop\User\DataModel\UserInterface;
@@ -22,8 +24,29 @@ class EntityEnforcerSubscriber implements
     public function getSubscribedEvents()
     {
         return array(
+            'postPersist',
             'prePersist'
         );
+    }
+
+    /**
+     * After an entity has been persisted, shoot off an event so the
+     * user module can update itself
+     */
+    public function postPersist(LifecycleEventArgs $args)
+    {
+        $document = $args->getDocument();
+        if ($document instanceof EntityInterface) {
+            $eventManager = $this->getServiceLocator()
+                ->get('Application')
+                ->getEventManager();
+
+            if ($document instanceof EntityFilterInterface) {
+                $eventManager->trigger(Events::ENTITY_POST_PERSIST, null, $document);
+            } elseif ($document instanceof EntitiesFilterInterface) {
+                $eventManager->trigger(Events::ENTITIES_POST_PERSIST, null, $document);
+            }
+        }
     }
 
     /**
@@ -45,7 +68,7 @@ class EntityEnforcerSubscriber implements
     /**
      * Adds the document entity to itself. This is to avoid a complex new
      * zone filter.
-     * 
+     *
      * @param EntitiesFilterInterface $document
      */
     protected function addDocumentIdToFilter(EntitiesFilterInterface $document)
@@ -56,7 +79,7 @@ class EntityEnforcerSubscriber implements
     /**
      * Adds an entity to the document base on the active entity
      * or the user.
-     * 
+     *
      * @param EntityFilterInterface $document
      */
     protected function addEntityToDocument(EntityFilterInterface $document)
@@ -73,14 +96,14 @@ class EntityEnforcerSubscriber implements
             //if not, check the user for allowed entities
             $this->addUserEntityToDocument($document);
         }
-        
+
         $this->validateEntity($document);
     }
 
     /**
      * Ensures that the document only contains an entity that the user is
      * authorized for.
-     * 
+     *
      * @param EntityFilterInterface $document
      * @throws AccessControlException
      */
@@ -97,7 +120,7 @@ class EntityEnforcerSubscriber implements
     /**
      * Adds entities to the document base on the active entity
      * or the user.
-     * 
+     *
      * @param EntitiesFilterInterface $document
      */
     protected function addEntitiesToDocument(EntitiesFilterInterface $document)
@@ -113,7 +136,7 @@ class EntityEnforcerSubscriber implements
             //if not, check the user for allowed entities
             $this->addUserEntityToDocument($document);
         }
-        
+
         $this->validateEntities($document);
 
         //ensure the document ID was also added to the filter
@@ -123,7 +146,7 @@ class EntityEnforcerSubscriber implements
     /**
      * Ensures that the document only contains entities that the user is
      * authorized for.
-     * 
+     *
      * @param EntitiesFilterInterface $document
      * @throws AccessControlException
      */
@@ -141,7 +164,7 @@ class EntityEnforcerSubscriber implements
 
     /**
      * Adds the entity contained in the user, to the document
-     * 
+     *
      * @param type $document
      * @throws MissingEntityFilterException
      */
