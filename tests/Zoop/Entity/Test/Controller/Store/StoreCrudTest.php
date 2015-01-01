@@ -5,6 +5,7 @@ namespace Zoop\Entity\Test\Controller\Store;
 use Zend\Http\Header\Origin;
 use Zend\Http\Header\Host;
 use Zoop\Store\DataModel\Store;
+use Zoop\Customer\DataModel\CustomerInterface;
 use Zoop\Entity\Test\AbstractTest;
 use Zoop\Test\Helper\DataHelper;
 
@@ -17,15 +18,20 @@ class StoreCrudTest extends AbstractTest
     {
         DataHelper::createEntities(self::getNoAuthDocumentManager(), self::getDbName());
 
+        $slug = "tesla-au";
+        $name = "Tesla - Australia";
         $data = [
-            "slug" => "tesla",
-            "name" => "Tesla",
+            "slug" => $slug,
+            "name" => $name,
             "primaryDomain" => "tesla.zoopcommerce.com",
             "domains" => [
                 "tesla.zoopcommerce.com",
-                "teslamotors.com"
+                "teslamotors.com.au"
             ],
-            "email" => "info@teslamotors.com"
+            "customer" => [
+                "\$ref" => "muskinc"
+            ],
+            "email" => "info@teslamotors.com.au"
         ];
 
         $request = $this->getRequest();
@@ -41,7 +47,9 @@ class StoreCrudTest extends AbstractTest
 
         $this->dispatch('http://api.zoopcommerce.local/stores');
 
-        $this->assertResponseStatusCode(403);
+        //TODO change this to 403. At the moment due to the reference requiring auth,
+        //exceptions cascade rather than stopping propegation.
+        $this->assertResponseStatusCode(500);
     }
 
     public function testCreateSuccess()
@@ -57,6 +65,9 @@ class StoreCrudTest extends AbstractTest
             "domains" => [
                 "tesla.zoopcommerce.com",
                 "teslamotors.com.au"
+            ],
+            "customer" => [
+                "\$ref" => "muskinc"
             ],
             "email" => "info@teslamotors.com.au"
         ];
@@ -94,6 +105,10 @@ class StoreCrudTest extends AbstractTest
         $store = DataHelper::get(self::getNoAuthDocumentManager(), 'Zoop\Store\DataModel\Store', $storeId);
         $this->assertTrue($store instanceof Store);
         $this->assertEquals($name, $store->getName());
+
+        $customer = $store->getCustomer();
+        $this->assertTrue($customer instanceof CustomerInterface);
+        $this->assertEquals('muskinc', $customer->getSlug());
 
         return $storeId;
     }

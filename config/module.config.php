@@ -201,6 +201,11 @@ return array(
                     'title' => 'The document entity is missing',
                     'status_code' => 500
                 ],
+                'Zoop\Entity\Exception\MissingParentException' => [
+                    'described_by' => 'document-parent-not-found',
+                    'title' => 'The document parent is missing',
+                    'status_code' => 500
+                ],
             ]
         ],
     ],

@@ -7,14 +7,23 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ODM\MongoDB\Event\LifecycleEventArgs;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorAwareTrait;
+use Zoop\Customer\DataModel\CustomerInterface;
+use Zoop\Entity\DataModel\ChildEntityInterface;
 use Zoop\Entity\DataModel\EntitiesFilterInterface;
 use Zoop\Entity\DataModel\EntityFilterInterface;
 use Zoop\Entity\DataModel\EntityInterface;
 use Zoop\Entity\Events;
+use Zoop\Entity\Exception\InvalidParentException;
 use Zoop\Entity\Exception\MissingEntityFilterException;
+use Zoop\Entity\Exception\MissingParentException;
+use Zoop\Partner\DataModel\PartnerInterface;
+use Zoop\Store\DataModel\StoreInterface;
 use Zoop\ShardModule\Exception\AccessControlException;
 use Zoop\User\DataModel\UserInterface;
 
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 class EntityEnforcerSubscriber implements
     EventSubscriber,
     ServiceLocatorAwareInterface
@@ -57,12 +66,47 @@ class EntityEnforcerSubscriber implements
     {
         $document = $args->getDocument();
 
+        //add entities to document
         if ($document instanceof EntityFilterInterface) {
             $this->addEntityToDocument($document);
         } elseif ($document instanceof EntitiesFilterInterface) {
             $this->addEntitiesToDocument($document);
         }
+
         //TODO apply the store/s filter
+
+        //add the parent entity to the document
+        $this->addParentEntityToDocument($document);
+    }
+
+    /**
+     * Adds the parent entity if it exists
+     * @param mixed $document
+     * @throws MissingParentException
+     */
+    protected function addParentEntityToDocument($document)
+    {
+        if ($document instanceof ChildEntityInterface) {
+            $entity = $this->getActiveEntity();
+            $parent = $document->getParent();
+
+            if ($entity) {
+                if (($document instanceof StoreInterface && $entity instanceof CustomerInterface) ||
+                    ($document instanceof CustomerInterface && $entity instanceof PartnerInterface)
+                ) {
+                    $document->setParent($entity);
+                } elseif (empty($parent)) {
+                    throw new MissingParentException('Missing parent entity');
+                }
+            } else {
+                if (empty($parent)) {
+                    throw new MissingParentException('Missing parent entity');
+                }
+            }
+
+            //validate parent
+            $this->validateParent($document);
+        }
     }
 
     /**
@@ -101,23 +145,6 @@ class EntityEnforcerSubscriber implements
     }
 
     /**
-     * Ensures that the document only contains an entity that the user is
-     * authorized for.
-     *
-     * @param EntityFilterInterface $document
-     * @throws AccessControlException
-     */
-    protected function validateEntity(EntityFilterInterface $document)
-    {
-        $user = $this->getUser();
-        if ($user) {
-            if (!in_array($document->getEntity(), $user->getEntities())) {
-                throw new AccessControlException("Missing valid entity");
-            }
-        }
-    }
-
-    /**
      * Adds entities to the document base on the active entity
      * or the user.
      *
@@ -144,6 +171,23 @@ class EntityEnforcerSubscriber implements
     }
 
     /**
+     * Ensures that the document only contains an entity that the user is
+     * authorized for.
+     *
+     * @param EntityFilterInterface $document
+     * @throws AccessControlException
+     */
+    protected function validateEntity(EntityFilterInterface $document)
+    {
+        $user = $this->getUser();
+        if ($user) {
+            if (!in_array($document->getEntity(), $user->getEntities())) {
+                throw new AccessControlException("Missing valid entity");
+            }
+        }
+    }
+
+    /**
      * Ensures that the document only contains entities that the user is
      * authorized for.
      *
@@ -159,6 +203,28 @@ class EntityEnforcerSubscriber implements
                     throw new AccessControlException("Missing valid entity");
                 }
             }
+        }
+    }
+
+    /**
+     * Ensures that the parent that was added is a valid one
+     *
+     * @param ChildEntityInterface $document
+     * @throws InvalidParentException
+     * @throws MissingParentException
+     */
+    protected function validateParent(ChildEntityInterface $document)
+    {
+        $parent = $document->getParent();
+        if (!empty($parent)) {
+            $user = $this->getUser();
+            if ($user && $user instanceof EntitiesFilterInterface) {
+                if (!in_array($parent->getSlug(), $user->getEntities())) {
+                    throw new InvalidParentException('Invalid parent entity');
+                }
+            }
+        } else {
+            throw new MissingParentException('Missing parent entity');
         }
     }
 

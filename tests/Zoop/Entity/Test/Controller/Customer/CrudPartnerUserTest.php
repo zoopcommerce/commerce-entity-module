@@ -6,6 +6,7 @@ use Zend\Http\Header\Origin;
 use Zend\Http\Header\Host;
 use Zoop\Entity\Test\AbstractTest;
 use Zoop\Customer\DataModel\Customer;
+use Zoop\Partner\DataModel\PartnerInterface;
 use Zoop\Test\Helper\DataHelper;
 
 class CrudPartnerUserTest extends AbstractTest
@@ -146,6 +147,10 @@ class CrudPartnerUserTest extends AbstractTest
         $customer = DataHelper::get(self::getNoAuthDocumentManager(), 'Zoop\Customer\DataModel\Customer', $customerId);
         $this->assertTrue($customer instanceof Customer);
         $this->assertEquals($name, $customer->getName());
+
+        $parent = $customer->getParent();
+        $this->assertTrue($parent instanceof PartnerInterface);
+        $this->assertEquals('bigspaceship', $parent->getSlug());
 
         return $customerId;
     }
