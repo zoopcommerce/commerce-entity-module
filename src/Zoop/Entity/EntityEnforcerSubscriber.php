@@ -7,6 +7,7 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ODM\MongoDB\Event\LifecycleEventArgs;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorAwareTrait;
+use Zoop\Common\Slugger;
 use Zoop\Customer\DataModel\CustomerInterface;
 use Zoop\Entity\DataModel\ChildEntityInterface;
 use Zoop\Entity\DataModel\EntitiesFilterInterface;
@@ -117,7 +118,14 @@ class EntityEnforcerSubscriber implements
      */
     protected function addDocumentIdToFilter(EntitiesFilterInterface $document)
     {
-        $document->addEntity($document->getId());
+        $slug = $document->getSlug();
+        if (empty($slug)) {
+            //ensure we create the slug now otherwise it won't
+            //appear in the metadata at persist time
+            $slug = Slugger::createSlug($document->getName());
+            $document->setSlug($slug);
+        }
+        $document->addEntity($slug);
     }
 
     /**
@@ -157,7 +165,7 @@ class EntityEnforcerSubscriber implements
             //only apply the entity if the active entity
             //is also an entity filter
             if ($entity instanceof EntitiesFilterInterface) {
-                $document->addEntity($entity->getId());
+                $document->addEntity($entity->getSlug());
             }
         } else {
             //if not, check the user for allowed entities
